@@ -1,0 +1,59 @@
+#ifndef STRUCTS_H
+#define STRUCTS_H
+
+#include <iostream>
+
+#include "defines.h"
+
+
+typedef struct Config{
+	integer_t cols;
+	integer_t rows;
+	integer_t timesamples;
+	real_t dx;
+	real_t dz;
+	real_t dt;
+
+	//cpml necessary configuration
+	integer_t cpml_width;
+	real_t r;
+	real_t max_vel;
+	real_t freq;
+
+	void (* init)(Config *config, ...);
+}Config;
+
+typedef struct Models{
+	real_t *h_velocity;
+	real_t *h_density;
+	real_t *d_velocity;
+	real_t *d_density;
+
+	void (* clean)(Models models);
+	void (* init)(Models *models, const Config config);
+}Models;
+
+typedef struct Fields{
+	real_t *p;
+	real_t *vel_x;
+	real_t *vel_z;
+	real_t *psi_x;
+	real_t *psi_z;
+	real_t *psi_vel_x;
+	real_t *psi_vel_z;
+
+	void (* clean)(Fields fields);
+	void (* init)(Fields *fields, const Config config);
+}Fields;
+
+typedef struct CPML{
+	real_t *ax;
+	real_t *bx;
+	real_t *az;
+	real_t *bz;
+
+	void (* clean)(CPML cpml);
+	void (* init)(CPML *cpml, const Config config);
+}CPML;
+
+#endif
