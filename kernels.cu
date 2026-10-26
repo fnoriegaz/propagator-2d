@@ -110,3 +110,20 @@ void kernel_cpml(real_t *a, real_t *b, real_t freq, integer_t cpml_width, real_t
 		b[tidx] = (dx / (dx + alpha)) * (a[tidx] - 1.0);
 	}
 }
+
+//assuming row major memory allocation
+__global__
+void kernel_add_source(real_t *p, real_t src_val, integer_t axis_width, integer_t sx, integer_t sz){
+	int tid = sx + axis_width * sz;
+	p[tid] += src_val;
+}
+
+//assuming row major memory allocation. therefore axis_width=cols
+__global__
+void kernel_get_gather(real_t *p, real_t *gather, integer_t *recvs, integer_t n_receivers, integer_t axis_width){
+	int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+
+	if(tidx < n_receivers){
+		gather[tidx] = p[recvs[tidx] + axis_width * recvs[tidx+n_receivers]];
+	}
+}

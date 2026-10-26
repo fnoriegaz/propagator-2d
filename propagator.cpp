@@ -76,6 +76,22 @@ void init_cpml(CPML *cpml, const Config config){
 	cudaMemset(cpml->bz, 0x00, config.rows*sizeof(real_t));
 }
 
+void init_source_default(Source *source, const Config config){
+	source->pos = (integer_t *)calloc(2*config.n_sources, sizeof(integer_t));
+	source->wavelet = (real_t *)calloc(config.timesamples, sizeof(real_t));
+}
+
+
+void init_receiver_default(Receiver *receiver, const Config config){
+	integer_t n_recvs = config.cols - 2 * config.cpml_width; //2 because of 2D geometry. even if depth is the same.
+
+	receiver->h_pos = (integer_t *)calloc(2*n_recvs, sizeof(integer_t));
+	receiver->h_gather = (real_t *)calloc(config.n_sources*2*n_recvs, sizeof(real_t));
+
+	cudaMalloc((void **)&receiver->d_pos, 2*n_recvs*sizeof(integer_t));
+	cudaMalloc((void **)&receiver->d_gather, config.n_sources*n_recvs*sizeof(real_t));
+}
+
 void clean_models(Models models){
 	free(models.h_velocity);
 	free(models.h_density);
@@ -100,6 +116,17 @@ void clean_cpml(CPML cpml){
 	cudaFree(cpml.bz);
 }
 
+void clean_source(Source *source){
+}
+
+void clean_receiver(Receiver *receiver){
+	free(receiver->h_pos);
+	free(receiver->h_gather);
+
+	cudaFree(receiver->d_pos);
+	cudaFree(receiver->d_gather);
+}
+
 void set_models(Models *models, const Config config){
 
 	for(integer_t c=0;c<config.rows*config.cols;c++){
@@ -117,11 +144,15 @@ int main(int argc, char *argv[]){
 	Models models;
 	Fields fields;
 	CPML cpml;
+	Source srcs;
+	Receiver recvs;
 
 	config.init = init_config_default;
 	cpml.init = init_cpml;
 	models.init = init_models;
 	fields.init = init_fields;
+	srcs.init = init_source_default;
+	recvs.init = init_receiver_default;
 
 	config.init(&config);
 	cpml.init(&cpml, config);

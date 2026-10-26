@@ -19,4 +19,10 @@ void kernel_dvxz_dt(real_t *vel_x, real_t *vel_z, real_t *p, real_t *psi_x, real
 __global__
 void kernel_cpml(real_t *a, real_t *b, real_t freq, integer_t cpml_width, real_t r, real_t max_vel, integer_t axis_width, real_t dh, real_t dt);
 
+__global__
+void kernel_add_source(real_t *p, real_t src_val, integer_t axis_width, integer_t sx, integer_t sz);
+
+__global__
+void kernel_get_gather(real_t *p, real_t *gather, integer_t *recvs, integer_t n_receivers, integer_t axis_width);
+
 #endif

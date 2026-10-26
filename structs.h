@@ -20,6 +20,10 @@ typedef struct Config{
 	real_t max_vel;
 	real_t freq;
 
+	//source and receivers geometry
+	integer_t n_sources;
+	integer_t n_receviers;
+
 	void (* init)(Config *config, ...);
 }Config;
 
@@ -55,5 +59,26 @@ typedef struct CPML{
 	void (* clean)(CPML cpml);
 	void (* init)(CPML *cpml, const Config config);
 }CPML;
+
+//contains wavelet/perturbation information and its geometry
+typedef struct Source{
+	integer_t *pos; //source positions as x and z coordinates
+	real_t *wavelet; //e.g. wavelet ricker
+
+	void (* init)(Source *source, const Config config);
+	void (* clean)(Source *source);
+}Source;
+
+//contains adquisition information/captured gather and the geometry
+typedef struct Receiver{
+	integer_t *h_pos; //the x and z coordinates of receivers
+	real_t *h_gather;
+	
+	integer_t *d_pos; //the x and z coordinates of receivers
+	real_t *d_gather;
+
+	void (* init)(Receiver *receiver, const Config config);
+	void (* clean)(Receiver *receiver);
+}Receiver;
 
 #endif
