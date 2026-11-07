@@ -22,7 +22,7 @@ typedef struct Config{
 
 	//source and receivers geometry
 	integer_t n_sources;
-	integer_t n_receviers;
+	integer_t n_receivers;
 
 	void (* init)(Config *config, ...);
 }Config;
@@ -33,7 +33,7 @@ typedef struct Models{
 	real_t *d_velocity;
 	real_t *d_density;
 
-	void (* clean)(Models models);
+	void (* clean)(Models *models);
 	void (* init)(Models *models, const Config config);
 }Models;
 
@@ -46,7 +46,7 @@ typedef struct Fields{
 	real_t *psi_vel_x;
 	real_t *psi_vel_z;
 
-	void (* clean)(Fields fields);
+	void (* clean)(Fields *fields);
 	void (* init)(Fields *fields, const Config config);
 }Fields;
 
@@ -56,7 +56,7 @@ typedef struct CPML{
 	real_t *az;
 	real_t *bz;
 
-	void (* clean)(CPML cpml);
+	void (* clean)(CPML *cpml);
 	void (* init)(CPML *cpml, const Config config);
 }CPML;
 

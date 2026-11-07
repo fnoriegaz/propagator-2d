@@ -5,7 +5,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-	void propagate(Models *models, Fields *fields, CPML *cpml, Config config);
+	void propagate(Models *models, Fields *fields, CPML *cpml, Source *sources, Receiver *receivers, Config config);
 }
 #endif
 

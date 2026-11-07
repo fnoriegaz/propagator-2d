@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <math.h>
 
 #include "propagator.cuh"
 
@@ -32,6 +33,9 @@ void init_config_default(Config *config, ...){
 	config->r = 1e-4;
 	config->cpml_width = 20;
 	config->max_vel = 3000;
+
+	config->n_sources = 1;
+	config->n_receivers = config->cols - 2 * config->cpml_width;
 }
 
 void init_models(Models *models, const Config config){
@@ -79,6 +83,17 @@ void init_cpml(CPML *cpml, const Config config){
 void init_source_default(Source *source, const Config config){
 	source->pos = (integer_t *)calloc(2*config.n_sources, sizeof(integer_t));
 	source->wavelet = (real_t *)calloc(config.timesamples, sizeof(real_t));
+
+	source->pos[0] = config.cols / 2;
+	source->pos[1] = 20;
+
+	real_t t_shifted = 2.0 / config.freq;
+	for(int t=0;t<config.timesamples;t++){
+		real_t t_current = t * config.dt - 1;
+		real_t alpha = PI * PI * config.freq * config.freq * t_current* t_current;
+		source->wavelet[t] = (1 - 2 * alpha) * exp(-alpha);
+	}
+
 }
 
 
@@ -86,37 +101,46 @@ void init_receiver_default(Receiver *receiver, const Config config){
 	integer_t n_recvs = config.cols - 2 * config.cpml_width; //2 because of 2D geometry. even if depth is the same.
 
 	receiver->h_pos = (integer_t *)calloc(2*n_recvs, sizeof(integer_t));
-	receiver->h_gather = (real_t *)calloc(config.n_sources*2*n_recvs, sizeof(real_t));
+	receiver->h_gather = (real_t *)calloc(config.timesamples*2*n_recvs, sizeof(real_t));
 
 	cudaMalloc((void **)&receiver->d_pos, 2*n_recvs*sizeof(integer_t));
-	cudaMalloc((void **)&receiver->d_gather, config.n_sources*n_recvs*sizeof(real_t));
+	cudaMalloc((void **)&receiver->d_gather, config.timesamples*n_recvs*sizeof(real_t));
+
+	for(int x=0;x<n_recvs;x++){
+		receiver->h_pos[x] = x + config.cpml_width;
+		receiver->h_pos[x+n_recvs] = 25;
+	}
+
+	cudaMemcpy(receiver->d_pos,receiver->h_pos,n_recvs*sizeof(integer_t),cudaMemcpyHostToDevice);
 }
 
-void clean_models(Models models){
-	free(models.h_velocity);
-	free(models.h_density);
-	cudaFree(models.d_velocity);
-	cudaFree(models.d_density);
+void clean_models(Models *models){
+	free(models->h_velocity);
+	free(models->h_density);
+	cudaFree(models->d_velocity);
+	cudaFree(models->d_density);
 }
 
-void clean_fields(Fields fields){
-	cudaFree(fields.p);
-	cudaFree(fields.vel_x);
-	cudaFree(fields.vel_z);
-	cudaFree(fields.psi_x);
-	cudaFree(fields.psi_z);
-	cudaFree(fields.psi_vel_x);
-	cudaFree(fields.psi_vel_z);
+void clean_fields(Fields *fields){
+	cudaFree(fields->p);
+	cudaFree(fields->vel_x);
+	cudaFree(fields->vel_z);
+	cudaFree(fields->psi_x);
+	cudaFree(fields->psi_z);
+	cudaFree(fields->psi_vel_x);
+	cudaFree(fields->psi_vel_z);
 }
 
-void clean_cpml(CPML cpml){
-	cudaFree(cpml.ax);
-	cudaFree(cpml.bx);
-	cudaFree(cpml.az);
-	cudaFree(cpml.bz);
+void clean_cpml(CPML *cpml){
+	cudaFree(cpml->ax);
+	cudaFree(cpml->bx);
+	cudaFree(cpml->az);
+	cudaFree(cpml->bz);
 }
 
 void clean_source(Source *source){
+	free(source->wavelet);
+	free(source->pos);
 }
 
 void clean_receiver(Receiver *receiver){
@@ -154,12 +178,26 @@ int main(int argc, char *argv[]){
 	srcs.init = init_source_default;
 	recvs.init = init_receiver_default;
 
+	cpml.clean = clean_cpml;
+	models.clean = clean_models;
+	fields.clean = clean_fields;
+	srcs.clean = clean_source;
+	recvs.clean = clean_receiver;
+
 	config.init(&config);
 	cpml.init(&cpml, config);
 	models.init(&models, config);
 	fields.init(&fields, config);
+	srcs.init(&srcs, config);
+	recvs.init(&recvs, config);
 
-	propagate(&models, &fields, &cpml, config);
+	propagate(&models, &fields, &cpml, &srcs, &recvs, config);
+
+	cpml.clean(&cpml);
+	models.clean(&models);
+	fields.clean(&fields);
+	srcs.clean(&srcs);
+	recvs.clean(&recvs);
 
 	return 0;
 }

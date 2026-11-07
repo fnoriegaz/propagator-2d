@@ -13,6 +13,6 @@ echo "Compiling propagator.cu"
 nvcc -arch=sm_120 --compile  propagator.cu -o propagatorcu.o
 
 echo "Compiling and linking propagator"
-g++ propagator.o propagatorcu.o kernelscu.o -L /opt/cuda/lib/ -lcudart -o propagator
+g++ propagator.o propagatorcu.o kernelscu.o -L /opt/cuda/lib/ -lcudart -lm -o propagator
 
-./propagator
+time ./propagator
