@@ -26,13 +26,13 @@ void init_config_default(Config *config, ...){
 	config->cols = 1024;
 	config->timesamples = 3000;
 	config->dt = 1e-3;
-	config->dx =  25.0;
-	config->dz =  25.0;
+	config->dx = 6.25;
+	config->dz = 6.25;
 
 	config->freq = 3.0;
 	config->r = 1e-4;
 	config->cpml_width = 20;
-	config->max_vel = 3000;
+	config->max_vel = 4000;
 
 	config->n_sources = 1;
 	config->n_receivers = config->cols - 2 * config->cpml_width;
@@ -47,6 +47,9 @@ void init_models(Models *models, const Config config){
 
 	cudaMalloc((void **)&models->d_velocity, config.rows*config.cols*sizeof(real_t));
 	cudaMalloc((void **)&models->d_density, config.rows*config.cols*sizeof(real_t));
+
+	cudaMemset(models->d_velocity, 0x00, config.rows*config.cols*sizeof(real_t));
+	cudaMemset(models->d_density, 0x00, config.rows*config.cols*sizeof(real_t));
 }
 
 void init_fields(Fields *fields, const Config config){
@@ -85,7 +88,7 @@ void init_source_default(Source *source, const Config config){
 	source->wavelet = (real_t *)calloc(config.timesamples, sizeof(real_t));
 
 	source->pos[0] = config.cols / 2;
-	source->pos[1] = 20;
+	source->pos[1] = config.rows / 2;
 
 	real_t t_shifted = 2.0 / config.freq;
 	for(int t=0;t<config.timesamples;t++){
@@ -98,20 +101,19 @@ void init_source_default(Source *source, const Config config){
 
 
 void init_receiver_default(Receiver *receiver, const Config config){
-	integer_t n_recvs = config.cols - 2 * config.cpml_width; //2 because of 2D geometry. even if depth is the same.
 
-	receiver->h_pos = (integer_t *)calloc(2*n_recvs, sizeof(integer_t));
-	receiver->h_gather = (real_t *)calloc(config.timesamples*2*n_recvs, sizeof(real_t));
+	receiver->h_pos = (integer_t *)calloc(2*config.n_receivers, sizeof(integer_t));
+	receiver->h_gather = (real_t *)calloc(config.timesamples*config.n_receivers, sizeof(real_t));
 
-	cudaMalloc((void **)&receiver->d_pos, 2*n_recvs*sizeof(integer_t));
-	cudaMalloc((void **)&receiver->d_gather, config.timesamples*n_recvs*sizeof(real_t));
+	cudaMalloc((void **)&receiver->d_pos, 2*config.n_receivers*sizeof(integer_t));
+	cudaMalloc((void **)&receiver->d_gather, config.timesamples*config.n_receivers*sizeof(real_t));
 
-	for(int x=0;x<n_recvs;x++){
+	for(int x=0;x<config.n_receivers;x++){
 		receiver->h_pos[x] = x + config.cpml_width;
-		receiver->h_pos[x+n_recvs] = 25;
+		receiver->h_pos[x+config.n_receivers] = config.rows/2;
 	}
 
-	cudaMemcpy(receiver->d_pos,receiver->h_pos,n_recvs*sizeof(integer_t),cudaMemcpyHostToDevice);
+	cudaMemcpy(receiver->d_pos,receiver->h_pos,2*config.n_receivers*sizeof(integer_t),cudaMemcpyHostToDevice);
 }
 
 void clean_models(Models *models){
@@ -162,6 +164,18 @@ void set_models(Models *models, const Config config){
 	cudaMemcpy(models->d_density, models->h_density, config.rows*config.cols*sizeof(real_t), cudaMemcpyHostToDevice);
 }
 
+
+void save_binary_generic(const char *filename, real_t *data, integer_t size){
+	size_t err;
+	FILE *fid = fopen(filename, "wb");
+	if(!fid || fid == NULL){
+		printf("Error while trying opening file %s\n",filename);
+		exit(-1);
+	}
+	err = fwrite(data, size, sizeof(real_t), fid);
+	fclose(fid);
+}
+
 int main(int argc, char *argv[]){
 
 	Config config;
@@ -191,7 +205,9 @@ int main(int argc, char *argv[]){
 	srcs.init(&srcs, config);
 	recvs.init(&recvs, config);
 
+	set_models(&models, config);
 	propagate(&models, &fields, &cpml, &srcs, &recvs, config);
+	save_binary_generic("gather.bin", recvs.h_gather, config.timesamples*config.n_receivers);
 
 	cpml.clean(&cpml);
 	models.clean(&models);

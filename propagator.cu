@@ -24,11 +24,12 @@ void propagate(Models *models, Fields *fields, CPML *cpml, Source *source, Recei
 
 		kernel_add_source<<<1,1>>>(fields->p, source->wavelet[t], config.cols, source->pos[0], source->pos[1]);
 
-		kernel_get_gather<<<bpgx,TPBX>>>(fields->p, receivers->d_gather+config.n_receivers*sizeof(real_t), receivers->d_pos, config.n_receivers, config.cols);
+		kernel_get_gather<<<bpgx,TPBX>>>(fields->p, receivers->d_gather, receivers->d_pos, config.n_receivers, config.cols, t*config.n_receivers);
 
 		err = cudaGetLastError();
 		if(err != cudaSuccess){
-			printf("error: %s",cudaGetErrorString(err));
+			printf("at iteration %d error %d %s\n",t,err,cudaGetErrorString(err));
+
 		}
 	}
 

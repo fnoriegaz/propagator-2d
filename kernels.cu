@@ -65,22 +65,24 @@ void kernel_dvxz_dt(real_t *vel_x, real_t *vel_z, real_t *p, real_t *psi_x, real
 	real_t r_psi_z = 0.0;
 
 	if(tidx > 2 && tidx < cols-4 && tidz > 2 && tidz < rows-4){
-		real_t r_density_inv = 2.0 / (density[tid+1] - density[tid]);
+		real_t r_density_inv = 2.0 / (density[tid+1] + density[tid]);
 		r_dp_dx = (c1 * (p[tid+1] - p[tid]) +
-			c1 * (p[tid+2] - p[tid-1]) +
-			c1 * (p[tid+3] - p[tid-2]) +
-			c1 * (p[tid+4] - p[tid-3])) / dx;
+			c2 * (p[tid+2] - p[tid-1]) +
+			c3 * (p[tid+3] - p[tid-2]) +
+			c4 * (p[tid+4] - p[tid-3])) / dx;
 
 		r_dp_dz = (c1 * (p[tid+1*cols] - p[tid]) +
-			c1 * (p[tid+2*cols] - p[tid-1*cols]) +
-			c1 * (p[tid+3*cols] - p[tid-2*cols]) +
-			c1 * (p[tid+4*cols] - p[tid-3*cols])) / dx;
+			c2 * (p[tid+2*cols] - p[tid-1*cols]) +
+			c3 * (p[tid+3*cols] - p[tid-2*cols]) +
+			c4 * (p[tid+4*cols] - p[tid-3*cols])) / dz;
 
 		r_psi_x = psi_x[tid] * ax[tidx] + bx[tidx] * r_dp_dx;
 		r_psi_z = psi_z[tid] * az[tidz] + bz[tidz] * r_dp_dz;
 
 		vel_x[tid] -= dt * r_density_inv * (r_dp_dx + r_psi_x);
 		vel_z[tid] -= dt * r_density_inv * (r_dp_dz + r_psi_z);
+		psi_x[tid] = r_psi_x;
+		psi_z[tid] = r_psi_z;
 	}
 }
 
@@ -120,10 +122,10 @@ void kernel_add_source(real_t *p, real_t src_val, integer_t axis_width, integer_
 
 //assuming row major memory allocation. therefore axis_width=cols
 __global__
-void kernel_get_gather(real_t *p, real_t *gather, integer_t *recvs, integer_t n_receivers, integer_t axis_width){
+void kernel_get_gather(real_t *p, real_t *gather, integer_t *recvs, integer_t n_receivers, integer_t axis_width, integer_t offset){
 	int tidx = threadIdx.x + blockIdx.x * blockDim.x;
 
 	if(tidx < n_receivers){
-		gather[tidx] = p[recvs[tidx] + axis_width * recvs[tidx+n_receivers]];
+		gather[offset + tidx] = p[recvs[tidx] + axis_width * recvs[tidx+n_receivers]];
 	}
 }
