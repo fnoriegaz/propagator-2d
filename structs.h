@@ -1,5 +1,4 @@
-#ifndef STRUCTS_H
-#define STRUCTS_H
+#pragma once
 
 #include <iostream>
 
@@ -81,4 +80,3 @@ typedef struct Receiver{
 	void (* clean)(Receiver *receiver);
 }Receiver;
 
-#endif

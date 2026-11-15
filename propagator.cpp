@@ -22,17 +22,17 @@ void print_config(Config config){
 }
 
 void init_config_default(Config *config, ...){
-	config->rows = 1024;
-	config->cols = 1024;
-	config->timesamples = 3000;
-	config->dt = 1e-3;
-	config->dx = 6.25;
-	config->dz = 6.25;
+	config->rows = 2801;
+	config->cols = 13601;
+	config->timesamples = 50000;
+	config->dt = 1e-4;
+	config->dx = 1.25;
+	config->dz = 1.25;
 
-	config->freq = 3.0;
+	config->freq = 9.0;
 	config->r = 1e-4;
 	config->cpml_width = 20;
-	config->max_vel = 4000;
+	config->max_vel = 5000;
 
 	config->n_sources = 1;
 	config->n_receivers = config->cols - 2 * config->cpml_width;
@@ -153,18 +153,6 @@ void clean_receiver(Receiver *receiver){
 	cudaFree(receiver->d_gather);
 }
 
-void set_models(Models *models, const Config config){
-
-	for(integer_t c=0;c<config.rows*config.cols;c++){
-		models->h_velocity[c] = 1500.0;
-		models->h_density[c] = 1000.0;
-	}
-
-	cudaMemcpy(models->d_velocity, models->h_velocity, config.rows*config.cols*sizeof(real_t), cudaMemcpyHostToDevice);
-	cudaMemcpy(models->d_density, models->h_density, config.rows*config.cols*sizeof(real_t), cudaMemcpyHostToDevice);
-}
-
-
 void save_binary_generic(const char *filename, real_t *data, integer_t size){
 	size_t err;
 	FILE *fid = fopen(filename, "wb");
@@ -174,6 +162,34 @@ void save_binary_generic(const char *filename, real_t *data, integer_t size){
 	}
 	err = fwrite(data, size, sizeof(real_t), fid);
 	fclose(fid);
+}
+
+bool load_binary_generic(const char *filename, real_t *data, integer_t size){
+	size_t err;
+	FILE *fid = fopen(filename, "rb");
+	if(!fid || fid == NULL){
+		printf("Error while reading the file %s\n",filename);
+		return false;
+	}
+	err = fread(data, size, sizeof(real_t), fid);
+	fclose(fid);
+	return true;
+}
+
+void set_models(Models *models, const Config config, const char *velocity_filename, const char *density_filename){
+
+	bool loaded_vel = load_binary_generic(velocity_filename, models->h_velocity, config.cols*config.rows);
+	bool loaded_den = load_binary_generic(density_filename, models->h_density, config.cols*config.rows);
+
+	if(!loaded_vel && !loaded_den){
+		for(integer_t c=0;c<config.rows*config.cols;c++){
+			models->h_velocity[c] = 1500.0;
+			models->h_density[c] = 1000.0;
+		}
+	}
+
+	cudaMemcpy(models->d_velocity, models->h_velocity, config.rows*config.cols*sizeof(real_t), cudaMemcpyHostToDevice);
+	cudaMemcpy(models->d_density, models->h_density, config.rows*config.cols*sizeof(real_t), cudaMemcpyHostToDevice);
 }
 
 int main(int argc, char *argv[]){
@@ -205,7 +221,7 @@ int main(int argc, char *argv[]){
 	srcs.init(&srcs, config);
 	recvs.init(&recvs, config);
 
-	set_models(&models, config);
+	set_models(&models, config, "MODEL_P-WAVE_VELOCITY_1.25m.bin", "MODEL_DENSITY_1.25m.bin");
 	propagate(&models, &fields, &cpml, &srcs, &recvs, config);
 	save_binary_generic("gather.bin", recvs.h_gather, config.timesamples*config.n_receivers);
 

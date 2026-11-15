@@ -1,5 +1,4 @@
-#ifndef DEFINES_H
-#define DEFINES_H
+#pragma once
 
 #include <iostream>
 
@@ -11,4 +10,3 @@ typedef float real_t;
 #define TPBY 8
 #define PI 3.14159265359
 
-#endif

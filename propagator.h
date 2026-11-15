@@ -1,8 +1,5 @@
-#ifndef PROPAGATOR_H
-#define PROPAGATOR_H
-
+#pragma once
 #include <cuda_runtime.h>
 
 #include "structs.h"
 
-#endif
