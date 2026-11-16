@@ -8,7 +8,9 @@
 #include <stdarg.h>
 #include <math.h>
 
+#include "propagator.h"
 #include "propagator.cuh"
+#include "io.h"
 
 
 void print_config(Config config){
@@ -153,29 +155,6 @@ void clean_receiver(Receiver *receiver){
 	cudaFree(receiver->d_gather);
 }
 
-void save_binary_generic(const char *filename, real_t *data, integer_t size){
-	size_t err;
-	FILE *fid = fopen(filename, "wb");
-	if(!fid || fid == NULL){
-		printf("Error while trying opening file %s\n",filename);
-		exit(-1);
-	}
-	err = fwrite(data, size, sizeof(real_t), fid);
-	fclose(fid);
-}
-
-bool load_binary_generic(const char *filename, real_t *data, integer_t size){
-	size_t err;
-	FILE *fid = fopen(filename, "rb");
-	if(!fid || fid == NULL){
-		printf("Error while reading the file %s\n",filename);
-		return false;
-	}
-	err = fread(data, size, sizeof(real_t), fid);
-	fclose(fid);
-	return true;
-}
-
 void set_models(Models *models, const Config config, const char *velocity_filename, const char *density_filename){
 
 	bool loaded_vel = load_binary_generic(velocity_filename, models->h_velocity, config.cols*config.rows);
@@ -192,6 +171,19 @@ void set_models(Models *models, const Config config, const char *velocity_filena
 	cudaMemcpy(models->d_density, models->h_density, config.rows*config.cols*sizeof(real_t), cudaMemcpyHostToDevice);
 }
 
+void initialize(Models *models, Fields *fields, CPML *cpml, Source *srcs, Receiver *recvs, Config config){
+
+
+	config.init(&config);
+	cpml->init(cpml, config);
+	models->init(models, config);
+	fields->init(fields, config);
+	srcs->init(srcs, config);
+	recvs->init(recvs, config);
+
+	set_models(models, config, "MODEL_P-WAVE_VELOCITY_1.25m.bin", "MODEL_DENSITY_1.25m.bin");
+}
+
 int main(int argc, char *argv[]){
 
 	Config config;
@@ -201,27 +193,8 @@ int main(int argc, char *argv[]){
 	Source srcs;
 	Receiver recvs;
 
-	config.init = init_config_default;
-	cpml.init = init_cpml;
-	models.init = init_models;
-	fields.init = init_fields;
-	srcs.init = init_source_default;
-	recvs.init = init_receiver_default;
+	initialize(&models, &fields, &cpml, &srcs, &recvs, config);
 
-	cpml.clean = clean_cpml;
-	models.clean = clean_models;
-	fields.clean = clean_fields;
-	srcs.clean = clean_source;
-	recvs.clean = clean_receiver;
-
-	config.init(&config);
-	cpml.init(&cpml, config);
-	models.init(&models, config);
-	fields.init(&fields, config);
-	srcs.init(&srcs, config);
-	recvs.init(&recvs, config);
-
-	set_models(&models, config, "MODEL_P-WAVE_VELOCITY_1.25m.bin", "MODEL_DENSITY_1.25m.bin");
 	propagate(&models, &fields, &cpml, &srcs, &recvs, config);
 	save_binary_generic("gather.bin", recvs.h_gather, config.timesamples*config.n_receivers);
 

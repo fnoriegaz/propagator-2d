@@ -1,7 +1,7 @@
 #ifndef PROPAGATOR_CUH
 #define PROPAGATOR_CUH
 
-#include "propagator.h"
+#include "structs.h"
 
 #ifdef __cplusplus
 extern "C" {
