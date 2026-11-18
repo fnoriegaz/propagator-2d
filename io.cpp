@@ -7,8 +7,12 @@ void save_binary_generic(const char *filename, real_t *data, integer_t size){
 		printf("Error while trying opening file %s\n",filename);
 		exit(-1);
 	}
-	err = fwrite(data, size, sizeof(real_t), fid);
+	err = fwrite(data, sizeof(real_t), size, fid);
 	fclose(fid);
+	if(err != size){
+		printf("Error! written only %d elements instead of expected %d\n",err,size);
+		exit(-1);
+	}
 }
 
 bool load_binary_generic(const char *filename, real_t *data, integer_t size){
@@ -18,8 +22,12 @@ bool load_binary_generic(const char *filename, real_t *data, integer_t size){
 		printf("Error while reading the file %s\n",filename);
 		return false;
 	}
-	err = fread(data, size, sizeof(real_t), fid);
+	err = fread(data, sizeof(real_t), size, fid);
 	fclose(fid);
+	if(err != size){
+		printf("Error! read only %d elements instead of expected %d\n",err,size);
+		exit(-1);
+	}
 	return true;
 }
 

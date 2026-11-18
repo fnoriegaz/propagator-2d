@@ -19,7 +19,13 @@ void print_config(Config *config){
 	<< " dx: " << config->dx \
 	<< " dz: " << config->dz\
 	<< " dt: " << config->dt \
-	<< " timesamples: " << config->timesamples << std::endl;
+	<< " timesamples: " << config->timesamples \
+	<< " freq: " << config->freq \
+	<< " r: " << config->r \
+	<< " cpml_width: " << config->cpml_width \
+	<< " max_vel: " << config->max_vel \
+	<< " n_sources: " << config->n_sources \
+	<< " n_receivers: " << config->n_receivers << std::endl;
 }
 
 void init_config_default(Config *config, ...){
@@ -159,6 +165,13 @@ void set_models(Models *models, Config *config, const char *velocity_filename, c
 	bool loaded_vel = load_binary_generic(velocity_filename, models->h_velocity, config->cols*config->rows);
 	bool loaded_den = load_binary_generic(density_filename, models->h_density, config->cols*config->rows);
 
+	if(!loaded_vel){
+		std::cout << "Warning, could not read velocity model " << velocity_filename << "\n";
+	}
+	if(!loaded_den){
+		std::cout << "Warning, could not read density model " << density_filename << "\n";
+	}
+	//fallback to default water model.
 	if(!loaded_vel && !loaded_den){
 		for(integer_t c=0;c<config->rows*config->cols;c++){
 			models->h_velocity[c] = 1500.0;
@@ -199,12 +212,12 @@ void initialize(Models *models, Fields *fields, CPML *cpml, Source *srcs, Receiv
 
 int main(int argc, char *argv[]){
 
-	Config config;
-	Models models;
-	Fields fields;
-	CPML cpml;
-	Source srcs;
-	Receiver recvs;
+	Config config = {};
+	Models models = {};
+	Fields fields = {};
+	CPML cpml = {};
+	Source srcs = {};
+	Receiver recvs = {};
 
 	std::cout << "initializing...\n";
 	initialize(&models, &fields, &cpml, &srcs, &recvs, &config);
