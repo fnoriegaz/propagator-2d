@@ -1,9 +1,6 @@
 #pragma once
 
-#include <cuda_runtime.h>
-
-#include "helpers.hpp"
-
+#include "propagator/structs.h"
 
 namespace Propagator{
 void initialize(Models *models, Fields *fields, CPML *cpml, Source *srcs, Receiver *recvs, Config *config);

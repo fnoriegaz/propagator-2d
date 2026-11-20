@@ -1,4 +1,5 @@
 #include "kernels.cuh"
+#include "constants.h"
 
 
 __constant__ real_t c1 =  1225.0f/1024.0f;

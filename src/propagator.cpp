@@ -3,13 +3,14 @@
  * Hopefully gets to a mature state...*/
 
 #include <iostream>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 
-#include "propagator.h"
-#include "io.h"
+#include "constants.h"
 #include "helpers.hpp"
+#include "io.h"
+#include "propagator/propagator.h"
 
 
 namespace Propagator{
@@ -29,7 +30,7 @@ void initialize(Models *models, Fields *fields, CPML *cpml, Source *srcs, Receiv
 	srcs->init(srcs, config);
 	recvs->init(recvs, config);
 
-	set_models(models, config, "MODEL_P-WAVE_VELOCITY_1.25m.bin", "MODEL_DENSITY_1.25m.bin");
+	set_models(models, config, "/home/fabian/Documents/git/propagator-2d/MODEL_P-WAVE_VELOCITY_1.25m.bin", "/home/fabian/Documents/git/propagator-2d/MODEL_DENSITY_1.25m.bin");
 }
 
 void save_gather(const char *filename, Receiver *receiver, Config *config){
@@ -56,21 +57,3 @@ void finalize(Models *models, Fields *fields, CPML *cpml, Source *srcs, Receiver
 }
 }
 
-int main(int argc, char *argv[]){
-
-	Config config = {};
-	Models models = {};
-	Fields fields = {};
-	CPML cpml = {};
-	Source srcs = {};
-	Receiver recvs = {};
-
-	std::cout << "initializing...\n";
-	Propagator::initialize(&models, &fields, &cpml, &srcs, &recvs, &config);
-
-	Propagator::propagate(&models, &fields, &cpml, &srcs, &recvs, &config);
-	Propagator::save_gather("gather.bin", &recvs, &config);
-
-	Propagator::finalize(&models, &fields, &cpml, &srcs, &recvs, &config);
-	return 0;
-}

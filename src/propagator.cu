@@ -1,5 +1,8 @@
-#include "propagator.h"
+#include "propagator/propagator.h"
 #include "kernels.cuh"
+#include "helpers.hpp"
+#include "constants.h"
+
 
 namespace Propagator{
 void propagate(Models *models, Fields *fields, CPML *cpml, Source *source, Receiver *receivers, Config *config){

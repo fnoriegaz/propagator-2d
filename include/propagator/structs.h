@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "defines.h"
+#include "propagator/types.h"
 
 
 typedef struct Config{

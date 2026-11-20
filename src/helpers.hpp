@@ -4,7 +4,7 @@
 
 #include <cuda_runtime.h>
 
-#include "structs.h"
+#include "propagator/structs.h"
 #include "io.h"
 
 

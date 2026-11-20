@@ -3,7 +3,7 @@
 
 #include <cuda_runtime.h>
 
-#include "structs.h"
+#include "propagator/structs.h"
 
 
 //compute dp/dt using staggered grid with vel_x and vel_z half cell position.

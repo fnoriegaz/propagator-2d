@@ -1,4 +1,9 @@
 *.o
 *.out
 *.bin
-propagator
+venv
+*.tif
+*.png
+*.jpeg
+*.jpg
+
