@@ -31,7 +31,9 @@ void init_config_default(Config *config, ...){
 	config->max_vel = 5000;
 
 	config->n_sources = 1;
-	config->n_receivers = config->cols - 2 * config->cpml_width;
+
+	config->velocity_filename = (char *)"default";
+	config->density_filename = (char *)"default";
 }
 
 void init_models(Models *models, Config *config){
@@ -158,28 +160,36 @@ void clean_receiver(Receiver *receiver){
 	cudaFree(receiver->d_gather);
 }
 
+void set_models_default(Models *models, Config *config){
+	//fallback to default water model.
+	for(integer_t c=0;c<config->rows*config->cols;c++){
+		models->h_velocity[c] = 1500.0;
+		models->h_density[c] = 1000.0;
+	}
 
-void set_models(Models *models, Config *config, const char *velocity_filename, const char *density_filename){
+	cudaMemcpy(models->d_velocity, models->h_velocity, config->rows*config->cols*sizeof(real_t), cudaMemcpyHostToDevice);
+	cudaMemcpy(models->d_density, models->h_density, config->rows*config->cols*sizeof(real_t), cudaMemcpyHostToDevice);
 
-	bool loaded_vel = load_binary_generic(velocity_filename, models->h_velocity, config->cols*config->rows);
-	bool loaded_den = load_binary_generic(density_filename, models->h_density, config->cols*config->rows);
+	std::cout << "Models set to default water...\n";
+}
+
+bool set_models(Models *models, Config *config){
+
+	bool loaded_vel = load_binary_generic((const char *)config->velocity_filename, models->h_velocity, config->cols*config->rows);
+	bool loaded_den = load_binary_generic((const char *)config->density_filename, models->h_density, config->cols*config->rows);
 
 	if(!loaded_vel){
-		std::cout << "Warning, could not read velocity model " << velocity_filename << "\n";
+		std::cout << "Could not load the velocity model " << config->velocity_filename << "\n";
+		return false;
 	}
-	if(!loaded_den){
-		std::cout << "Warning, could not read density model " << density_filename << "\n";
-	}
-	//fallback to default water model.
-	if(!loaded_vel && !loaded_den){
-		for(integer_t c=0;c<config->rows*config->cols;c++){
-			models->h_velocity[c] = 1500.0;
-			models->h_density[c] = 1000.0;
-		}
+	else if(!loaded_den){
+		std::cout << "Could not load the velocity model " << config->velocity_filename << "\n";
+		return false;
 	}
 
 	cudaMemcpy(models->d_velocity, models->h_velocity, config->rows*config->cols*sizeof(real_t), cudaMemcpyHostToDevice);
 	cudaMemcpy(models->d_density, models->h_density, config->rows*config->cols*sizeof(real_t), cudaMemcpyHostToDevice);
 
 	std::cout << "Models set correctly\n";
+	return true;
 }

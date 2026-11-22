@@ -41,5 +41,5 @@ void clean_source(Source *source);
 
 void clean_receiver(Receiver *receiver);
 
-void set_models(Models *models, Config *config, const char *velocity_filename, const char *density_filename);
+bool set_models(Models *models, Config *config);
 

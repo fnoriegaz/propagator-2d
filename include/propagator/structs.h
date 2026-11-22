@@ -23,6 +23,11 @@ typedef struct Config{
 	integer_t n_sources;
 	integer_t n_receivers;
 
+	bool default_config = false;
+ 	
+	char *velocity_filename;
+	char *density_filename;
+	
 	void (* init)(Config *config, ...);
 }Config;
 
