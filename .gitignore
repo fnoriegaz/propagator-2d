@@ -6,4 +6,6 @@ venv
 *.png
 *.jpeg
 *.jpg
-
+venv
+.venv
+build
