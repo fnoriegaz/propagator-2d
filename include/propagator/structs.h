@@ -27,8 +27,6 @@ typedef struct Config{
  	
 	char *velocity_filename;
 	char *density_filename;
-	
-	void (* init)(Config *config, ...);
 }Config;
 
 typedef struct Models{
@@ -36,9 +34,6 @@ typedef struct Models{
 	real_t *h_density;
 	real_t *d_velocity;
 	real_t *d_density;
-
-	void (* clean)(Models *models);
-	void (* init)(Models *models, Config *config);
 }Models;
 
 typedef struct Fields{
@@ -49,9 +44,6 @@ typedef struct Fields{
 	real_t *psi_z;
 	real_t *psi_vel_x;
 	real_t *psi_vel_z;
-
-	void (* clean)(Fields *fields);
-	void (* init)(Fields *fields, Config *config);
 }Fields;
 
 typedef struct CPML{
@@ -59,18 +51,12 @@ typedef struct CPML{
 	real_t *bx;
 	real_t *az;
 	real_t *bz;
-
-	void (* clean)(CPML *cpml);
-	void (* init)(CPML *cpml, Config *config);
 }CPML;
 
 //contains wavelet/perturbation information and its geometry
 typedef struct Source{
 	integer_t *pos; //source positions as x and z coordinates
 	real_t *wavelet; //e.g. wavelet ricker
-
-	void (* init)(Source *source, Config *config);
-	void (* clean)(Source *source);
 }Source;
 
 //contains adquisition information/captured gather and the geometry
@@ -80,8 +66,5 @@ typedef struct Receiver{
 	
 	integer_t *d_pos; //the x and z coordinates of receivers
 	real_t *d_gather;
-
-	void (* init)(Receiver *receiver, Config *config);
-	void (* clean)(Receiver *receiver);
 }Receiver;
 

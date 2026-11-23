@@ -18,6 +18,7 @@ void print_config(Config *config){
 }
 
 void init_config_default(Config *config, ...){
+	/*
 	config->rows = 2801;
 	config->cols = 13601;
 	config->timesamples = 50000;
@@ -29,6 +30,23 @@ void init_config_default(Config *config, ...){
 	config->r = 1e-4;
 	config->cpml_width = 20;
 	config->max_vel = 5000;
+
+	config->n_sources = 1;
+
+	config->velocity_filename = (char *)"default";
+	config->density_filename = (char *)"default";
+	*/
+	config->rows = 256;
+	config->cols = 256;
+	config->timesamples = 3000;
+	config->dt = 1e-3;
+	config->dx = 12.5;
+	config->dz = 12.5;
+
+	config->freq = 3.0;
+	config->r = 1e-4;
+	config->cpml_width = 20;
+	config->max_vel = 3000;
 
 	config->n_sources = 1;
 

@@ -43,3 +43,4 @@ void clean_receiver(Receiver *receiver);
 
 bool set_models(Models *models, Config *config);
 
+void set_models_default(Models *models, Config *config);

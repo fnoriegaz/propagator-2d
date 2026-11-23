@@ -16,14 +16,13 @@
 
 namespace Propagator{
 bool load_config_default(Config *config, Source *srcs, Receiver *recvs){
-	config->init = init_config_default;
-	config->init(config);
+	init_config_default(config);
 
 	config->n_receivers = config->cols - 2 * config->cpml_width;
 	config->default_config = true;
 
-	srcs->init = init_source_default;
-	recvs->init = init_receiver_default;
+	init_source_default(srcs, config);
+	init_receiver_default(recvs, config);
 
 	return true;
 }
@@ -46,18 +45,18 @@ bool load_config(Config *config, const char *config_path){
 
 void initialize(Models *models, Fields *fields, CPML *cpml, Source *srcs, Receiver *recvs, Config *config){
 
+	init_cpml(cpml, config);
+	init_models(models, config);
+	init_fields(fields, config);
+	init_source_default(srcs, config);
+	init_receiver_default(recvs, config);
 
-	cpml->init = init_cpml;
-	models->init = init_models;
-	fields->init = init_fields;
-
-	cpml->init(cpml, config);
-	models->init(models, config);
-	fields->init(fields, config);
-	srcs->init(srcs, config);
-	recvs->init(recvs, config);
-
-	set_models(models, config);
+	if(config->default_config){
+		set_models_default(models, config);
+	}
+	else{
+		set_models(models, config);
+	}
 }
 
 void save_gather(const char *filename, Receiver *receiver, Config *config){
@@ -68,17 +67,11 @@ void save_gather(const char *filename, Receiver *receiver, Config *config){
 void finalize(Models *models, Fields *fields, CPML *cpml, Source *srcs, Receiver *recvs, Config *config){
 	
 	std::cout <<"Finalizing...\n";
-	cpml->clean = clean_cpml;
-	models->clean = clean_models;
-	fields->clean = clean_fields;
-	srcs->clean = clean_source;
-	recvs->clean = clean_receiver;
-
-	cpml->clean(cpml);
-	fields->clean(fields);
-	models->clean(models);
-	srcs->clean(srcs);
-	recvs->clean(recvs);
+	clean_cpml(cpml);
+	clean_models(models);
+	clean_fields(fields);
+	clean_source(srcs);
+	clean_receiver(recvs);
 
 	std::cout << "Finalize completed\n";
 }
