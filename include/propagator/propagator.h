@@ -3,6 +3,8 @@
 #include "propagator/structs.h"
 
 namespace Propagator{
+bool load_config(Config *config, const char *config_path);
+
 bool load_config_default(Config *config, Source *srcs, Receiver *recvs);
 
 void initialize(Models *models, Fields *fields, CPML *cpml, Source *srcs, Receiver *recvs, Config *config);

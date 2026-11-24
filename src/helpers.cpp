@@ -4,17 +4,19 @@
 
 void print_config(Config *config){
 	std::cout << "\ncols: " << config->cols \
-	<< " rows: " << config->rows \
-	<< " dx: " << config->dx \
-	<< " dz: " << config->dz\
-	<< " dt: " << config->dt \
-	<< " timesamples: " << config->timesamples \
-	<< " freq: " << config->freq \
-	<< " r: " << config->r \
-	<< " cpml_width: " << config->cpml_width \
-	<< " max_vel: " << config->max_vel \
-	<< " n_sources: " << config->n_sources \
-	<< " n_receivers: " << config->n_receivers << std::endl;
+	<< ", rows: " << config->rows \
+	<< ", dx: " << config->dx \
+	<< ", dz: " << config->dz\
+	<< ", dt: " << config->dt \
+	<< ", timesamples: " << config->timesamples \
+	<< ", freq: " << config->freq \
+	<< ", r: " << config->r \
+	<< ", cpml_width: " << config->cpml_width \
+	<< ", max_vel: " << config->max_vel \
+	<< ", n_sources: " << config->n_sources \
+	<< ", n_receivers: " << config->n_receivers \
+	<< ", velocity path: " << config->velocity_filename \
+	<< ", density path: " << config->density_filename << std::endl;
 }
 
 void init_config_default(Config *config, ...){

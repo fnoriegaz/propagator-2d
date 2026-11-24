@@ -25,4 +25,4 @@ g++ -c -I include/ -I src/ tests/test_propagator.cpp -o build/test_propagator.o
 echo "Compiling and linking test_propagator"
 g++ build/test_propagator.o build/propagator.o build/propagatorcu.o build/kernelscu.o build/io.o build/helpers.o -L /opt/cuda/lib/ -lcudart -lm -o build/test_propagator
 
-time build/test_propagator
+time build/test_propagator ./tests/custom_config.txt
