@@ -23,7 +23,6 @@ int main(int argc, char *argv[]){
 	std::cout << "initializing...\n";
 	Propagator::load_config_default(&config, &srcs, &recvs);
 	Propagator::load_config(&config, argv[1]);
-	Propagator::load_config_default(&config, &srcs, &recvs);
 	Propagator::initialize(&models, &fields, &cpml, &srcs, &recvs, &config);
 	Propagator::propagate(&models, &fields, &cpml, &srcs, &recvs, &config);
 	Propagator::save_gather("/home/fabian/Documents/git/propagator-2d/gather.bin", &recvs, &config);

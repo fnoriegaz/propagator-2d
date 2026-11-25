@@ -28,6 +28,8 @@ bool load_config_default(Config *config, Source *srcs, Receiver *recvs){
 }
 
 bool load_config(Config *config, const char *config_path){
+	config->default_config = false;
+
 	FILE *fid = fopen(config_path, "r");
 	if(fid == NULL){
 		std::cout << "Could not open file for read: " << config_path << "\n";
@@ -43,7 +45,6 @@ bool load_config(Config *config, const char *config_path){
 		memcpy(lineptr_copy, lineptr, lineptr_len+1);
 
 		char *line_split = strtok(lineptr_copy, " ");
-		//std::cout << "checking: " << line_split << "\n";
 		if(!strcmp(line_split, "inline")){
 			line_split = strtok(NULL, " ");
 			config->cols = atoi(line_split);
@@ -76,20 +77,31 @@ bool load_config(Config *config, const char *config_path){
 			line_split = strtok(NULL, " ");
 			config->cpml_width = atoi(line_split);
 		}
-		else if(!strcmp(line_split, "velocity_filename")){
+		else if(!strcmp(line_split, "max_vel")){
 			line_split = strtok(NULL, " ");
-			config->velocity_filename = (char *)line_split;
+			config->max_vel = atoi(line_split);
+		}
+		else if(!strcmp(line_split, "n_sources")){
+			line_split = strtok(NULL, " ");
+			config->n_sources = atoi(line_split);
+		}
+		else if(!strcmp(line_split, "n_receivers")){
+			line_split = strtok(NULL, " ");
+			config->n_receivers = atoi(line_split);
+		}
+		else if(!strcmp(line_split, "velocity_filename")){
+			line_split = strtok(NULL, " \t\r\n");
+			config->velocity_filename = strdup(line_split);
 		}
 		else if(!strcmp(line_split, "density_filename")){
-			line_split = strtok(NULL, " ");
-			config->density_filename =(char *)line_split;
+			line_split = strtok(NULL, " \t\r\n");
+			config->density_filename = strdup(line_split);
 		}
 
 		free(lineptr_copy);
 	}
 	fclose(fid);
 	free(lineptr);
-
 	print_config(config);
 	return true;
 }

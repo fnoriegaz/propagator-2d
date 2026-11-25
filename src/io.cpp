@@ -16,6 +16,7 @@ void save_binary_generic(const char *filename, real_t *data, integer_t size){
 }
 
 bool load_binary_generic(const char *filename, real_t *data, integer_t size){
+	printf("Trying to read: %f Gib\n",(float)size*4/1000000000);
 	size_t err;
 	FILE *fid = fopen(filename, "rb");
 	if(!fid || fid == NULL){

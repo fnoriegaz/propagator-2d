@@ -20,24 +20,6 @@ void print_config(Config *config){
 }
 
 void init_config_default(Config *config, ...){
-	/*
-	config->rows = 2801;
-	config->cols = 13601;
-	config->timesamples = 50000;
-	config->dt = 1e-4;
-	config->dx = 1.25;
-	config->dz = 1.25;
-
-	config->freq = 9.0;
-	config->r = 1e-4;
-	config->cpml_width = 20;
-	config->max_vel = 5000;
-
-	config->n_sources = 1;
-
-	config->velocity_filename = (char *)"default";
-	config->density_filename = (char *)"default";
-	*/
 	config->rows = 256;
 	config->cols = 256;
 	config->timesamples = 3000;
@@ -57,7 +39,6 @@ void init_config_default(Config *config, ...){
 }
 
 void init_models(Models *models, Config *config){
-	print_config(config);
 
 	models->h_velocity = (real_t *)calloc(config->cols*config->rows, sizeof(real_t));
 	models->h_density = (real_t *)calloc(config->cols*config->rows, sizeof(real_t));
@@ -112,6 +93,7 @@ void init_source_default(Source *source, Config *config){
 		real_t t_current = t * config->dt - 1;
 		real_t alpha = PI * PI * config->freq * config->freq * t_current* t_current;
 		source->wavelet[t] = (1 - 2 * alpha) * exp(-alpha);
+		std::cout << source->wavelet[t] << std::endl;
 	}
 
 }
@@ -195,6 +177,7 @@ void set_models_default(Models *models, Config *config){
 
 bool set_models(Models *models, Config *config){
 
+	print_config(config);
 	bool loaded_vel = load_binary_generic((const char *)config->velocity_filename, models->h_velocity, config->cols*config->rows);
 	bool loaded_den = load_binary_generic((const char *)config->density_filename, models->h_density, config->cols*config->rows);
 
@@ -203,7 +186,7 @@ bool set_models(Models *models, Config *config){
 		return false;
 	}
 	else if(!loaded_den){
-		std::cout << "Could not load the velocity model " << config->velocity_filename << "\n";
+		std::cout << "Could not load the density model " << config->velocity_filename << "\n";
 		return false;
 	}
 
