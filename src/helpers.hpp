@@ -27,9 +27,9 @@ void init_fields(Fields *fields, Config *config);
 
 void init_cpml(CPML *cpml, Config *config);
 
-void init_source_default(Source *source, Config *config);
+void init_source(Source *source, Config *config);
 
-void init_receiver_default(Receiver *receiver, Config *config);
+void init_receiver(Receiver *receiver, Config *config);
 
 void clean_models(Models *models);
 
@@ -44,3 +44,7 @@ void clean_receiver(Receiver *receiver);
 bool set_models(Models *models, Config *config);
 
 void set_models_default(Models *models, Config *config);
+
+void set_receivers_default(Receiver *receiver, Config *config);
+
+void set_source_default(Source *source, Config *config);

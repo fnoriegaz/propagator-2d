@@ -15,8 +15,8 @@ void print_config(Config *config){
 	<< ", max_vel: " << config->max_vel \
 	<< ", n_sources: " << config->n_sources \
 	<< ", n_receivers: " << config->n_receivers \
-	<< ", velocity path: " << config->velocity_filename \
-	<< ", density path: " << config->density_filename << std::endl;
+	<< ", velocity path: " << config->velocity_file \
+	<< ", density path: " << config->density_file << std::endl;
 }
 
 void init_config_default(Config *config, ...){
@@ -34,8 +34,8 @@ void init_config_default(Config *config, ...){
 
 	config->n_sources = 1;
 
-	config->velocity_filename = (char *)"default";
-	config->density_filename = (char *)"default";
+	config->velocity_file = (char *)"default";
+	config->density_file = (char *)"default";
 }
 
 void init_models(Models *models, Config *config){
@@ -81,25 +81,14 @@ void init_cpml(CPML *cpml, Config *config){
 	cudaMemset(cpml->bz, 0x00, config->rows*sizeof(real_t));
 }
 
-void init_source_default(Source *source, Config *config){
+void init_source(Source *source, Config *config){
 	source->pos = (integer_t *)calloc(2*config->n_sources, sizeof(integer_t));
 	source->wavelet = (real_t *)calloc(config->timesamples, sizeof(real_t));
-
-	source->pos[0] = config->cols / 2;
-	source->pos[1] = config->rows / 2;
-
-	real_t t_shifted = 2.0 / config->freq;
-	for(int t=0;t<config->timesamples;t++){
-		real_t t_current = t * config->dt - 1;
-		real_t alpha = PI * PI * config->freq * config->freq * t_current* t_current;
-		source->wavelet[t] = (1 - 2 * alpha) * exp(-alpha);
-		std::cout << source->wavelet[t] << std::endl;
-	}
 
 }
 
 
-void init_receiver_default(Receiver *receiver, Config *config){
+void init_receiver(Receiver *receiver, Config *config){
 
 	receiver->h_pos = (integer_t *)calloc(2*config->n_receivers, sizeof(integer_t));
 	receiver->h_gather = (real_t *)calloc(config->timesamples*config->n_receivers, sizeof(real_t));
@@ -107,12 +96,6 @@ void init_receiver_default(Receiver *receiver, Config *config){
 	cudaMalloc((void **)&receiver->d_pos, 2*config->n_receivers*sizeof(integer_t));
 	cudaMalloc((void **)&receiver->d_gather, config->timesamples*config->n_receivers*sizeof(real_t));
 
-	for(int x=0;x<config->n_receivers;x++){
-		receiver->h_pos[x] = x + config->cpml_width;
-		receiver->h_pos[x+config->n_receivers] = config->rows/2;
-	}
-
-	cudaMemcpy(receiver->d_pos,receiver->h_pos,2*config->n_receivers*sizeof(integer_t),cudaMemcpyHostToDevice);
 }
 
 void clean_models(Models *models){
@@ -162,6 +145,30 @@ void clean_receiver(Receiver *receiver){
 	cudaFree(receiver->d_gather);
 }
 
+void set_receivers_default(Receiver *receiver, Config *config){
+
+	for(int x=0;x<config->n_receivers;x++){
+		receiver->h_pos[x] = x + config->cpml_width;
+		receiver->h_pos[x+config->n_receivers] = config->rows/2;
+	}
+
+	cudaMemcpy(receiver->d_pos,receiver->h_pos,2*config->n_receivers*sizeof(integer_t),cudaMemcpyHostToDevice);
+}
+
+void set_source_default(Source *source, Config *config){
+
+	source->pos[0] = config->cols / 2;
+	source->pos[1] = config->rows / 2;
+
+	real_t t_shifted = 2.0 / config->freq;
+	for(int t=0;t<config->timesamples;t++){
+		real_t t_current = t * config->dt - 1;
+		real_t alpha = PI * PI * config->freq * config->freq * t_current* t_current;
+		source->wavelet[t] = (1 - 2 * alpha) * exp(-alpha);
+	}
+
+}
+
 void set_models_default(Models *models, Config *config){
 	//fallback to default water model.
 	for(integer_t c=0;c<config->rows*config->cols;c++){
@@ -178,15 +185,15 @@ void set_models_default(Models *models, Config *config){
 bool set_models(Models *models, Config *config){
 
 	print_config(config);
-	bool loaded_vel = load_binary_generic((const char *)config->velocity_filename, models->h_velocity, config->cols*config->rows);
-	bool loaded_den = load_binary_generic((const char *)config->density_filename, models->h_density, config->cols*config->rows);
+	bool loaded_vel = load_binary_generic((const char *)config->velocity_file, models->h_velocity, config->cols*config->rows);
+	bool loaded_den = load_binary_generic((const char *)config->density_file, models->h_density, config->cols*config->rows);
 
 	if(!loaded_vel){
-		std::cout << "Could not load the velocity model " << config->velocity_filename << "\n";
+		std::cout << "Could not load the velocity model " << config->velocity_file << "\n";
 		return false;
 	}
 	else if(!loaded_den){
-		std::cout << "Could not load the density model " << config->velocity_filename << "\n";
+		std::cout << "Could not load the density model " << config->velocity_file << "\n";
 		return false;
 	}
 

@@ -17,7 +17,7 @@ void propagate(Models *models, Fields *fields, CPML *cpml, Source *source, Recei
 
 	kernel_cpml<<<bpgx,TPBX>>>(cpml->ax, cpml->bx, config->freq, config->cpml_width, config->r, config->max_vel, config->cols, config->dx, config->dt);
 	CUDA_CHECK_CALL(cudaGetLastError());
-	kernel_cpml<<<bpgz,TPBX>>>(cpml->az, cpml->bz, config->freq, config->cpml_width, config->r, config->max_vel, config->rows, config->dx, config->dt);
+	kernel_cpml<<<bpgz,TPBX>>>(cpml->az, cpml->bz, config->freq, config->cpml_width, config->r, config->max_vel, config->rows, config->dz, config->dt);
 	CUDA_CHECK_CALL(cudaGetLastError());
 
 	for(integer_t t=0;t<config->timesamples;t++){

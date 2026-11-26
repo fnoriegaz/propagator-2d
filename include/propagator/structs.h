@@ -23,10 +23,16 @@ typedef struct Config{
 	integer_t n_sources;
 	integer_t n_receivers;
 
-	bool default_config = false;
+	bool default_config;
+	bool default_source;
+	bool default_source_pos;
+	bool default_receiver;
  	
-	char *velocity_filename;
-	char *density_filename;
+	char *velocity_file;
+	char *density_file;
+	char *source_file;
+	char *srcs_positions_file;
+	char *recvs_positions_file;
 }Config;
 
 typedef struct Models{

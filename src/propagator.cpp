@@ -15,26 +15,30 @@
 
 
 namespace Propagator{
-bool load_config_default(Config *config, Source *srcs, Receiver *recvs){
-	init_config_default(config);
+bool load_config_default(Config *config){
 
+	init_config_default(config);
 	config->n_receivers = config->cols - 2 * config->cpml_width;
 	config->default_config = true;
-
-	init_source_default(srcs, config);
-	init_receiver_default(recvs, config);
+	config->default_source = true;
+	config->default_source_pos = true;
+	config->default_receiver = true;
 
 	return true;
 }
 
 bool load_config(Config *config, const char *config_path){
 	config->default_config = false;
+	config->default_config = true;
+	config->default_source = true;
+	config->default_source_pos = true;
+	config->default_receiver = true;
 
 	FILE *fid = fopen(config_path, "r");
-	if(fid == NULL){
-		std::cout << "Could not open file for read: " << config_path << "\n";
-		std::cout << "using default, already loaded values...\n";
-		return false;
+	if(!fid || fid == NULL){
+		std::cout << "Could not open file for read. Provided path: " << config_path << "\n";
+		std::cout << "Loading default configuration\n";
+		return load_config_default(config);
 	}
 	char *lineptr = NULL;
 	int read_bytes = 0;
@@ -89,13 +93,28 @@ bool load_config(Config *config, const char *config_path){
 			line_split = strtok(NULL, " ");
 			config->n_receivers = atoi(line_split);
 		}
-		else if(!strcmp(line_split, "velocity_filename")){
+		else if(!strcmp(line_split, "velocity_file")){
 			line_split = strtok(NULL, " \t\r\n");
-			config->velocity_filename = strdup(line_split);
+			config->velocity_file = strdup(line_split);
 		}
-		else if(!strcmp(line_split, "density_filename")){
+		else if(!strcmp(line_split, "density_file")){
 			line_split = strtok(NULL, " \t\r\n");
-			config->density_filename = strdup(line_split);
+			config->density_file = strdup(line_split);
+		}
+		else if(!strcmp(line_split, "source_file")){
+			line_split = strtok(NULL, " \t\r\n");
+			config->default_source = false;
+			config->source_file = strdup(line_split);
+		}
+		else if(!strcmp(line_split, "srcs_positions_file")){
+			line_split = strtok(NULL, " \t\r\n");
+			config->default_source_pos = false;
+			config->srcs_positions_file = strdup(line_split);
+		}
+		else if(!strcmp(line_split, "recvs_positions_file")){
+			line_split = strtok(NULL, " \t\r\n");
+			config->default_receiver = false;
+			config->recvs_positions_file = strdup(line_split);
 		}
 
 		free(lineptr_copy);
@@ -111,14 +130,26 @@ void initialize(Models *models, Fields *fields, CPML *cpml, Source *srcs, Receiv
 	init_cpml(cpml, config);
 	init_models(models, config);
 	init_fields(fields, config);
-	init_source_default(srcs, config);
-	init_receiver_default(recvs, config);
+	init_source(srcs, config);
+	init_receiver(recvs, config);
 
 	if(config->default_config){
 		set_models_default(models, config);
 	}
 	else{
 		set_models(models, config);
+	}
+	if(config->default_source){
+		set_source_default(srcs, config);
+	}
+	else{
+		set_source_default(srcs, config);
+	}
+	if(config->default_receiver){
+		set_receivers_default(recvs, config);
+	}
+	else{
+		set_receivers_default(recvs, config);
 	}
 }
 
